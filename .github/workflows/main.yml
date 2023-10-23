@@ -1,6 +1,10 @@
-name: Node.js CI
+name: Deploy Api
 
-on: workflow_dispatch
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
 
 jobs:
   build:
@@ -9,10 +13,27 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js
+      - name: Use Node.js 
         uses: actions/setup-node@v3
         with:
           node-version: '20.x'
-      - run: npm ci
-      - run: npm run build --if-present
-      - run: ls
+
+      - name: Install Dependancies
+        run: npm ci
+
+      - name: Building
+        run: npm run build --if-present
+      
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.SSH_PRIV_KEY }}" > ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_PUB_KEY }}" > ~/.ssh/id_rsa.pub
+          chmod 600 ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa.pub
+          ssh-keyscan -H ${{ secrets.OVH_IP }} >> ~/.ssh/known_hosts
+
+      - name: Copy builds to server
+        run: |
+          rsync -vrm  build/* ${{ secrets.OVH_SSH }}:~/foogle-api
+          ssh ${{ secrets.OVH_SSH }} "~/deploy.sh"
