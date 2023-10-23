@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { drive_v3 } from 'googleapis';
 
 export const SigninDetails = z.object({
     username : z.string().min(3),
@@ -34,6 +35,13 @@ export type MovieSearchQueryParams = {
     movie_name: string,
     movie_rel_year: string
 }
+
+
+export interface FoogleMovieResponse extends drive_v3.Schema$File{
+    cf_worker_link?: string
+    player_link?: string
+}
+
 
 export type SignupType = z.infer<typeof SignupDetails>
 export type SigninType = z.infer<typeof SigninDetails>
