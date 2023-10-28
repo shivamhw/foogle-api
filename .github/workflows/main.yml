@@ -35,5 +35,8 @@ jobs:
 
       - name: Copy builds to server
         run: |
-          rsync -vrm  build/* ${{ secrets.OVH_SSH }}:~/foogle-api
+          rsync -vrm  * ${{ secrets.OVH_SSH }}:~/foogle-api
+
+      - name: Deploy
+        run: |
           ssh ${{ secrets.OVH_SSH }} "~/deploy.sh"
