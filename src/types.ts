@@ -16,7 +16,9 @@ export const SignupDetails = z.object({
 export const signupInputs = z.object({
     username: z.string().min(3).transform((value: string): string => value.replace(/[^a-zA-Z0-9]/g, '')),
     password: z.string().min(6),
-    token: z.string()
+    token: z.string(),
+    name: z.string(),
+    email: z.string().email()
 })
 
 export const signinInputs = z.object({

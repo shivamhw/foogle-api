@@ -1,13 +1,14 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { GdriveHelper } from './GdriveHelper';
 import { get_file_query, get_movie_query } from './Querymaker';
-import { userModel } from './db';
 import * as jwt from 'jsonwebtoken';
 import { processResults } from './utils';
 import { signinInputs, signupInputs } from './types';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { MovieSearchQueryParams } from './types';
+import { PrismaClient } from '@prisma/client'
+const prisma = new PrismaClient()
 
 const app = express();
 const PORT = 3000;
@@ -56,27 +57,44 @@ app.post('/signup', async (req: Request, res: Response) => {
             );
         return;
     }
-    const { username, password, token } = parsedInput.data;
-    if(token !== process.env.SIGNUP_TOKEN){
+    const userDetails = parsedInput.data;
+    if(userDetails.token !== process.env.SIGNUP_TOKEN){
         return res.status(403).send({
             msg: "Invalid invitation token"
         });
     }
-    const userExist = await userModel.findOne({
-        username: username
-    });
+    const userExist = await prisma.user.findFirst({
+        where:{
+            username: userDetails.username
+        }
+    })
     if (userExist) {
         res.status(403).send({
             msg: "user already h be"
         });
         return;
     }
-    const newUser = new userModel({ username, password });
-    await newUser.save();
-    res.send({
-        msg: "user created"
-    });
-    return;
+    prisma.user.create({
+        data: {
+            name: userDetails.name!,
+            email: userDetails.email!,
+            password: userDetails.password!,
+            token: userDetails.token!,
+            username: userDetails.username!
+        }
+    })
+    .then(()=>{
+        return res.send({
+            msg: "user created"
+        });
+    })
+    .catch(()=>{
+        return res.status(403).send({
+            msg: "can not create user"
+        })
+    })
+
+    
 });
 
 app.post('/login', async (req: Request, res: Response) => {
@@ -89,9 +107,11 @@ app.post('/login', async (req: Request, res: Response) => {
         return;
     }
     const { username, password } = parsedInput.data;
-    const user = await userModel.findOne({
-        username: username
-    });
+    const user = await prisma.user.findFirst({
+        where:{
+            username: username
+        }
+    })
     if (!user || user?.password !== password) {
         res.status(401).send({
             msg: "Authenication Failed!"
