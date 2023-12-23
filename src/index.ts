@@ -23,7 +23,7 @@ app.use(cookieParser());
 
 
 const jwtAuthenication = (req: Request, res: Response, next: NextFunction) => {
-    const token = req.cookies.Authorization;
+    const token = req.headers.authorization;
     if (!token) {
         console.log("Token not found");
         res.status(401).send({
