@@ -1,9 +1,9 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { GdriveHelper } from './GdriveHelper';
-import { get_file_query, get_movie_query } from './Querymaker';
+import { get_file_query, get_movie_query, get_series_query } from './Querymaker';
 import * as jwt from 'jsonwebtoken';
 import { processResults } from './utils';
-import { signinInputs, signupInputs } from './types';
+import { GenericResponse, MovieSearchResponse, SeriesSearchQueryParams, signinInputs, signupInputs } from './types';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { MovieSearchQueryParams } from './types';
@@ -11,12 +11,12 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 const app = express();
-const PORT = 3000;
+const PORT = 3001;
 const gd = new GdriveHelper();
 
 
 
-
+// TODO: paginated responses
 app.use(cors())
 app.use(express.json());
 app.use(cookieParser());
@@ -119,7 +119,7 @@ app.post('/login', async (req: Request, res: Response) => {
         return;
     }
     const token = jwt.sign({ username: user.username }, <jwt.Secret>process.env.secret, {
-        expiresIn: "7d"
+        expiresIn: "30d"
     });
     res.cookie("Authorization", "Bearer " + token)
     res.status(200).send({
@@ -130,7 +130,7 @@ app.post('/login', async (req: Request, res: Response) => {
 });
 
 
-app.get('/movies', jwtAuthenication, async (req: Request, res: Response) => {
+app.get('/movies', jwtAuthenication, async (req: Request, res: Response<MovieSearchResponse>) => {
     let movie = <MovieSearchQueryParams>req.query
     let queries = get_movie_query(movie)
     let prs = queries.map((q) => gd.searchFiles(q));
@@ -143,6 +143,18 @@ app.get('/movies', jwtAuthenication, async (req: Request, res: Response) => {
     });
 });
 
+app.get('/series', jwtAuthenication, async (req: Request, res: Response<GenericResponse>) => {
+    let series = <SeriesSearchQueryParams>req.query
+    let queries = get_series_query(series)
+    let prs = queries.map((q) => gd.searchFiles(q));
+    let result = await Promise.all(prs);
+    let files = processResults(result);
+    return res.send({
+        msg: "success",
+        len: files.length,
+        data: files
+    });
+});
 
 
 app.get('/files', jwtAuthenication, async (req: Request, res: Response) => {

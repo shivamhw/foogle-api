@@ -72,7 +72,8 @@ export class GdriveHelper{
                 corpora: 'allDrives',
                 includeItemsFromAllDrives: true,
                 supportsAllDrives: true,
-                pageToken: token
+                pageToken: token,
+                pageSize: 100
             };
             let res  = await this.service.files.list(search_q);
             token = res.data.nextPageToken;

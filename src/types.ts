@@ -33,11 +33,23 @@ export type GenericResponse = {
     len?: number
 };
 
+export type MovieSearchResponse = {
+    err  ?: string,
+    msg : string
+    data?: FoogleMovieResponse[] | [],
+    len?: number
+};
+
 export type MovieSearchQueryParams = {
     movie_name: string,
     movie_rel_year: string
 }
 
+export type SeriesSearchQueryParams = {
+    name : string,
+    season ?: string,
+    episode ?: string
+}
 
 export interface FoogleMovieResponse extends drive_v3.Schema$File{
     cf_worker_link?: string
