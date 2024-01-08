@@ -11,7 +11,7 @@ export function processResults(result: drive_v3.Schema$File[][] ){
         r.map((file: FoogleMovieResponse) =>{
             if( !id_idx.has(file.id)){
                 file.cf_worker_link = process.env.CF_URL === undefined? "nourl/" : process.env.CF_URL + file.id;
-                file.player_link = file.cf_worker_link + "/" + encodeURIComponent(file?.name == undefined ? "" : file.name);
+                file.player_link = file.cf_worker_link.replace("getfile", "stream_file") + "/" + encodeURIComponent(file?.name == undefined ? "" : file.name);
                 files.push(file);
                 name_idx.add(file.name);
                 id_idx.add(file.id);
